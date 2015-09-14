@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" This script explores publishing ROS messages in ROS using Python """
+""" This script explores publishing ROS messages in ROS using Python by placing a marker 1m in front of Neato using base_link"""
 
 from visualization_msgs.msg import Marker
 from std_msgs.msg import ColorRGBA
@@ -9,9 +9,11 @@ import rospy
 
 rospy.init_node('marker_message')
 
+#setting intital position, color, and the scale of the marker
 pose = Pose(position=Point(x=0,y=1))
 color = ColorRGBA(r=1, a=1)
 scale = Vector3(x=.1,y=.1,z=.1)
+#creating a marker class, type 2 defines the marker as a sphere
 marker = Marker(pose=pose, color=color, scale = scale, type =2)
 marker.header.frame_id = "base_link"
 
@@ -20,10 +22,12 @@ marker.header.frame_id = "base_link"
 # 	print new_y
 	# pose = Pose(position=Point(x=1,y=new_y))
 
+#marker is published
 pub = rospy.Publisher("/my_marker", Marker, queue_size=10)
 
 r=rospy.Rate(10)
 
+#until rospy is killed, the marker will exist
 while not rospy.is_shutdown(): 
 	pub.publish(marker)
 	r.sleep()
