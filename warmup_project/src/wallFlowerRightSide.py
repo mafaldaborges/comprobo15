@@ -6,17 +6,17 @@ from sensor_msgs.msg import LaserScan
 twist=Twist()
 
 class wallFollowing():
-    """ A ROS node that implements a proportional controller to approach an obstacle
-        immediately in front of the robot """
+    """ A ROS node that follows a wall"""
 
     def __init__(self):
         print "at init"
-        """ Initialize a node with the specified target distance
-            from the forward obstacle """
+        """ Initialize node"""
         rospy.init_node('test3')
         #self.target_distance = rospy.get_param('~target_distance')
         self.sub=rospy.Subscriber("/scan",LaserScan, self.processScan)
         self.pub=rospy.Publisher("cmd_vel",Twist,queue_size=10)
+
+        #sets variables to zero
         self.twist=Twist()
         self.avgT90=0
         self.avgTR=0
@@ -26,6 +26,7 @@ class wallFollowing():
         
 
     def processScan(self,msg):
+        #creates lists to add data from sensors to
         self.bottomLeftList=[]
         self.bottomRightList=[]
         self.topLeftList=[]
@@ -36,6 +37,8 @@ class wallFollowing():
         self.bottomLeft10=[]
         print "in process scan", msg.header.stamp
         i=0
+        #scans 2 sets of angles and compares the distances away from the wall
+        #then it computes the difference and tries to force the difference to 0
 
         while i<2:
           
@@ -86,8 +89,9 @@ class wallFollowing():
             self.twist.angular.z=(self.avgBR-self.avgTR)
         # elif self.avgT90 != 0 and self.avgB90 !=0:
         #     self.twist.angular.z=(self.avgT90-self.avgB90)*0.5
+
         
-        
+        #constant linear velocity
           self.twist.linear.x=0.1
           #print self.twist
           self.pub.publish(self.twist)

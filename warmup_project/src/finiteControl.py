@@ -1,19 +1,13 @@
 #!/usr/bin/env python
 
-""" This is one of my recommended methods for implementing
-  finite state control in ROS Python
-  Note: this is kind of a hodgepodge of actual Python and
-      pseudo code, so there may be small typos """
+""" Finite state controller, default behavior: wall_follow but switches to person_follow when an object is detected directly in front"""
 import rospy
 from neato_node.msg import Bump
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist
 
 class FiniteStateController(object):
-  """ The intention of this example is to show how you would
-    use object-oriented principles to create a finite-state
-    controller that wall follows until an person is detected
-    in front of the robot, and then attempts to follow that person. """
+  """ Set behaviors, subscriber, publisher, and initialize variables """
 
   # these are constants that let us give a name to each of our states
   # the names don't necessarily have to match up with the names of
@@ -28,10 +22,11 @@ class FiniteStateController(object):
     # subscribe to relevant sensor topics
     self.sub=rospy.Subscriber('/scan', LaserScan, self.process_scan)
     self.pub=rospy.Publisher("cmd_vel",Twist,queue_size=10)
+    #intialize lists and variables
     self.twist=Twist()
     self.infront=[]
     self.targetangle=0
-    self.targetDistance =.5   #one meter target
+    self.targetDistance =.5   #half meter target
     self.currentDistance=0
     self.avgT90=0
     self.avgTR=0
@@ -85,7 +80,9 @@ class FiniteStateController(object):
 
         self.avgTR=sum(self.topRight10)/float(len(self.topRight10))
         self.avgBR=sum(self.bottomRight10)/float(len(self.bottomRight10))  
-        
+
+
+        #if ranges do not return as zeros an obstable is seen
         if msg.ranges[0]!=0:
           self.forward_obstacle_detected =True
         else:
@@ -93,6 +90,7 @@ class FiniteStateController(object):
           
 
   def wall_follow(self):
+    #sets wall follow behavior and switches behavior
     r = rospy.Rate(5)
     while not rospy.is_shutdown():
       if self.avgTR !=0 and self.avgBR !=0:
@@ -111,6 +109,7 @@ class FiniteStateController(object):
         return FiniteStateController.PERSON_FOLLOW_STATE
 
   def person_follow(self):
+    #sets person follow behavior and switches states
     r = rospy.Rate(5)
     while not rospy.is_shutdown():
       self.twist.angular.z=self.targetangle*.2
